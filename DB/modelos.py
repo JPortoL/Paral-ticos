@@ -1,5 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Date
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, ForeignKey, Integer, String, Date
 
 from .configuracion import Base
 
@@ -12,25 +11,17 @@ class ClinicoDB(Base):
     nombre = Column(String)
     apellido = Column(String)
 
+
 class ExamenDB(Base):
-    __tablename__ = "examen"
+    __tablename__ = "examenes"
 
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String)
     tipo = Column(String)
-    fecha_creado = Column(Date)
-    paciente = Column(String)
-    estado = Column(String)
+    fecha_creacion = Column(Date)
+    fecha_interpretacion = Column(Date, nullable=True)
+    resultado_id = Column(Integer, nullable=True)
     clinico_id = Column(Integer, ForeignKey("clinico.id"))
-
-    clinico = relationship("ClinicoDB", back_populates="examen")
-
-# class Item(Base):
-#     __tablename__ = "items"
-
-#     id = Column(Integer, primary_key=True, index=True)
-#     title = Column(String, index=True)
-#     description = Column(String, index=True)
-#     owner_id = Column(Integer, ForeignKey("users.id"))
-
-#     owner = relationship("User", back_populates="items")
+    interpretacion = Column(String, nullable=True)
+    paciente = Column(String)
+    estado = Column(String, index=True)

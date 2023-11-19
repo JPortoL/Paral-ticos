@@ -12,11 +12,7 @@ class Clinico:
 
     def __str__(self):
         return f'{self.id} {self.nombre} {self.apellido}  {self.email}'
-    
-    def crear_examen(self, nombre: str, tipo: str, paciente: str) -> Examen:
-        return Examen(nombre, tipo, datetime.datetime.now(), paciente, 
+
+    def crear_examen(self, nombre: str, tipo: str, paciente: int) -> Examen:
+        return Examen(nombre, tipo, datetime.datetime.now(), paciente,
                       EstadosExamen.CREADO.value, self.id)
-    
-
-
-    
