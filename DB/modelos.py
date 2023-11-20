@@ -31,6 +31,7 @@ class ExamenDB(Base):
     fecha_creacion = Column(Date)
     fecha_interpretacion = Column(Date, nullable=True)
     resultado_id = Column(Integer, ForeignKey("resultados.id"), nullable=True)
+    clinico_interpreta_id = Column(Integer, ForeignKey("clinico.id"), nullable=True)
     clinico_id = Column(Integer, ForeignKey("clinico.id"))
     interpretacion = Column(String, nullable=True)
     paciente_id = Column(Integer)

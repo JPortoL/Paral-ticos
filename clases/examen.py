@@ -13,6 +13,7 @@ class Examen:
             interpretacion: str = None,
             fecha_interpretacion: datetime = None,
             resultado_id: int = None,
+            clinico_interpreta_id: int = None,
     ):
         self.id = id
         self.tipo_id = tipo_id
@@ -23,6 +24,7 @@ class Examen:
         self.interpretacion = interpretacion
         self.estado = estado
         self.clinico_id = clinico_id
+        self.clinico_interpreta_id = clinico_interpreta_id
 
     def registrar_examen(self, resultado_id: int):
         self.resultado_id = resultado_id

@@ -21,6 +21,12 @@ class Clinico:
         return Examen(tipo_examen.id, datetime.datetime.now(), paciente_id,
                       EstadosExamen.CREADO.value, self.id)
 
+    def interpretar_examen(self, examen: Examen, interpretacion: str):
+        examen.interpretacion = interpretacion
+        examen.fecha_interpretacion = datetime.datetime.now()
+        examen.clinico_interpreta_id = self.id
+        examen.estado = EstadosExamen.FINALIZADO.value
+
     def registrar_resultado(
             self,
             tipo_examen: TipoExamen,

@@ -17,7 +17,7 @@ def get_db():
         db.close()
 
 
-@app.post("/crear_examen")
+@app.post("/crear_examen", tags=["Examen"])
 def crear_examen(id_clinico: int, tipo_examen_id: int, id_paciente: int, db: Session = Depends(get_db)):
     clinico = DatabaseCrud.search_clinico(db, id_clinico)
     tipo_examen = DatabaseCrud.search_tipo_examen(db, tipo_examen_id)
@@ -26,7 +26,7 @@ def crear_examen(id_clinico: int, tipo_examen_id: int, id_paciente: int, db: Ses
     return {"mensaje": "Examen creado", "examen": examen_creado}
 
 
-@app.post("/crear_resultado")
+@app.post("/crear_resultado", tags=["Examen"])
 def crear_resultado(
         id_clinico: int,
         id_examen: int,
@@ -51,7 +51,29 @@ def crear_resultado(
     return {"mensaje": "Resultado Registrado", "examen": examen, "resultado": resultado}
 
 
-@app.post("/crear_clinino")
+@app.patch("/interpretar_examen", tags=["Examen"])
+def interpretar_examen(id_clinico: int, id_examen: int, interpretacion: str, db: Session = Depends(get_db)):
+    clinico = DatabaseCrud.search_clinico(db, id_clinico)
+    examen = DatabaseCrud.search_examen(db, id_examen)
+    if examen.estado == EstadosExamen.CREADO.value:
+        raise HTTPException(status_code=400, detail="EL EXAMEN NO TIENE RESULTADO")
+    if examen.estado == EstadosExamen.FINALIZADO.value:
+        raise HTTPException(status_code=400, detail="EL EXAMEN YA ESTÁ INTERPRETADO")
+    clinico.interpretar_examen(examen, interpretacion)
+    DatabaseCrud.actualizar_interpretacion_examen(db, examen)
+    return {"mensaje": "Examen interpretado", "examen": examen}
+
+
+@app.get("/id", tags=["Examen"])
+def buscar_examen_completo(id_examen, db: Session = Depends(get_db)):
+    examen = DatabaseCrud.search_examen(db, id_examen)
+    resultado = None
+    if examen.resultado_id:
+        resultado = DatabaseCrud.search_resultado(db, examen.resultado_id)
+    return {"examen": examen, "resultado": resultado}
+
+
+@app.post("/crear_clinico", tags=["Clinico"])
 def crear_clinino(nombre: str, apellido: str, email: str, db: Session = Depends(get_db)):
     clinico = Clinico(nombre, apellido, email)
     clinico_creado = DatabaseCrud.create_clinico(db, clinico)

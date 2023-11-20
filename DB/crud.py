@@ -43,7 +43,7 @@ class DatabaseCrud:
     def search_examen(db: Session, id) -> Examen:
         examen = db.query(ExamenDB).filter(ExamenDB.id == id).first()
         if not examen:
-            raise HTTPException(status_code=404, detail="EXAMEN TYPE NOT FOUND")
+            raise HTTPException(status_code=404, detail="EXAMEN NOT FOUND")
         return Examen(
             examen.tipo_id,
             examen.fecha_creacion,
@@ -63,6 +63,14 @@ class DatabaseCrud:
         db.commit()
 
     @staticmethod
+    def actualizar_interpretacion_examen(db: Session, examen: Examen):
+        db_examen = db.query(ExamenDB).filter(ExamenDB.id == examen.id)
+        db_examen.update({'interpretacion': examen.interpretacion, 'estado': examen.estado,
+                          "fecha_interpretacion": examen.fecha_interpretacion,
+                          'clinico_interpreta_id': examen.clinico_interpreta_id})
+        db.commit()
+
+    @staticmethod
     def crear_resultado(db: Session, resultado: Resultado) -> ResultadoDB:
         db_resultado = ResultadoDB(
             fecha=resultado.fecha,
@@ -77,6 +85,22 @@ class DatabaseCrud:
         db.commit()
         db.refresh(db_resultado)
         return db_resultado
+
+    @staticmethod
+    def search_resultado(db: Session, id) -> Resultado:
+        resultado = db.query(ResultadoDB).filter(ResultadoDB.id == id).first()
+        if not resultado:
+            raise HTTPException(status_code=404, detail="RESULTADO NOT FOUND")
+        return Resultado(
+            resultado.fecha,
+            resultado.clinico_id,
+            resultado.valor_booleano,
+            resultado.valor_texto,
+            resultado.valor_numerico,
+            resultado.limite_inferior,
+            resultado.limite_superior,
+            resultado.id,
+        )
 
     @staticmethod
     def search_tipo_examen(db: Session, id) -> TipoExamen:
