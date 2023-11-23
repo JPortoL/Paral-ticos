@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 # class syntax
 class EstadosExamen(Enum):
     CREADO = "creado"

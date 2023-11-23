@@ -51,7 +51,6 @@ class DatabaseCrud:
             examen.estado,
             examen.clinico_id,
             examen.id,
-            examen.interpretacion,
             examen.fecha_interpretacion,
             examen.resultado_id,
         )
@@ -65,9 +64,14 @@ class DatabaseCrud:
     @staticmethod
     def actualizar_interpretacion_examen(db: Session, examen: Examen):
         db_examen = db.query(ExamenDB).filter(ExamenDB.id == examen.id)
-        db_examen.update({'interpretacion': examen.interpretacion, 'estado': examen.estado,
-                          "fecha_interpretacion": examen.fecha_interpretacion,
-                          'clinico_interpreta_id': examen.clinico_interpreta_id})
+        db_examen.update({'estado': examen.estado, "fecha_interpretacion": examen.fecha_interpretacion})
+        db.commit()
+
+    @staticmethod
+    def actualizar_interpretacion_resultado(db: Session, resultado: Resultado):
+        db_resultado = db.query(ResultadoDB).filter(ResultadoDB.id == resultado.id)
+        db_resultado.update(
+            {'interpretacion': resultado.interpretacion, 'clinico_interpreta_id': resultado.clinico_interpreta_id})
         db.commit()
 
     @staticmethod
@@ -78,8 +82,6 @@ class DatabaseCrud:
             valor_booleano=resultado.valor_booleano,
             valor_texto=resultado.valor_texto,
             valor_numerico=resultado.valor_numerico,
-            limite_inferior=resultado.limite_inferior,
-            limite_superior=resultado.limite_superior
         )
         db.add(db_resultado)
         db.commit()
@@ -97,9 +99,9 @@ class DatabaseCrud:
             resultado.valor_booleano,
             resultado.valor_texto,
             resultado.valor_numerico,
-            resultado.limite_inferior,
-            resultado.limite_superior,
             resultado.id,
+            clinico_interpreta_id=resultado.clinico_interpreta_id,
+            interpretacion=resultado.interpretacion
         )
 
     @staticmethod
@@ -107,4 +109,5 @@ class DatabaseCrud:
         te = db.query(ExamenTypeDB).filter(ExamenTypeDB.id == id).first()
         if not te:
             raise HTTPException(status_code=404, detail="EXAMEN TYPE NOT FOUND")
-        return TipoExamen(te.id, te.nombre, te.es_numero, te.es_imagen, te.es_texto, te.es_booleano)
+        return TipoExamen(te.id, te.nombre, te.es_numero, te.es_imagen, te.es_texto, te.es_booleano,
+                          limite_superior=te.limite_superior, limite_inferior=te.limite_inferior)

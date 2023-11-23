@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from constantes.estadoExamen import EstadosExamen
 
-app = FastAPI(title="paraliticos")
+app = FastAPI(title="Paraclinicos")
 
 
 def get_db():
@@ -30,8 +30,6 @@ def crear_examen(id_clinico: int, tipo_examen_id: int, id_paciente: int, db: Ses
 def crear_resultado(
         id_clinico: int,
         id_examen: int,
-        limite_superior: float = None,
-        limite_inferior: float = None,
         valor_numerico: float = None,
         valor_texto: str = None,
         valor_booleano: bool = None,
@@ -42,8 +40,7 @@ def crear_resultado(
     if examen.estado != EstadosExamen.CREADO.value:
         raise HTTPException(status_code=400, detail="EL EXAMEN YA TIENE RESULTADO")
     tipo_examen = DatabaseCrud.search_tipo_examen(db, examen.tipo_id)
-    resultado = clinico.registrar_resultado(tipo_examen, limite_superior, limite_inferior, valor_numerico,
-                                            valor_texto, valor_booleano)
+    resultado = clinico.registrar_resultado(tipo_examen, valor_numerico, valor_texto, valor_booleano)
     resultado_creado = DatabaseCrud.crear_resultado(db, resultado)
     examen.registrar_examen(resultado_creado.id)
     DatabaseCrud.actualizar_examen_resultado_id(db, examen.id, resultado_creado.id)
@@ -55,22 +52,33 @@ def crear_resultado(
 def interpretar_examen(id_clinico: int, id_examen: int, interpretacion: str, db: Session = Depends(get_db)):
     clinico = DatabaseCrud.search_clinico(db, id_clinico)
     examen = DatabaseCrud.search_examen(db, id_examen)
+    resultado = DatabaseCrud.search_resultado(db, examen.resultado_id)
     if examen.estado == EstadosExamen.CREADO.value:
         raise HTTPException(status_code=400, detail="EL EXAMEN NO TIENE RESULTADO")
     if examen.estado == EstadosExamen.FINALIZADO.value:
         raise HTTPException(status_code=400, detail="EL EXAMEN YA ESTÁ INTERPRETADO")
-    clinico.interpretar_examen(examen, interpretacion)
+    clinico.interpretar_examen(examen, resultado, interpretacion)
     DatabaseCrud.actualizar_interpretacion_examen(db, examen)
-    return {"mensaje": "Examen interpretado", "examen": examen}
+    DatabaseCrud.actualizar_interpretacion_resultado(db, resultado)
+    return {"mensaje": "Examen interpretado", "examen": examen, "resultado": resultado}
 
 
-@app.get("/id", tags=["Examen"])
+@app.get("/buscar-examen", tags=["Examen"])
 def buscar_examen_completo(id_examen, db: Session = Depends(get_db)):
     examen = DatabaseCrud.search_examen(db, id_examen)
-    resultado = None
+    tipo_examen = DatabaseCrud.search_tipo_examen(db, examen.tipo_id)
+    examen.tipo = {'id': tipo_examen.id, 'name': tipo_examen.nombre}
+    response_resultado = None
     if examen.resultado_id:
         resultado = DatabaseCrud.search_resultado(db, examen.resultado_id)
-    return {"examen": examen, "resultado": resultado}
+        if tipo_examen.es_imagen or tipo_examen.es_texto:
+            response_resultado = {'valor': resultado.valor_texto}
+        elif tipo_examen.es_booleano:
+            response_resultado = {'valor': resultado.valor_booleano}
+        else:
+            response_resultado = {'valor': resultado.valor_numerico, 'limite_superior': tipo_examen.limite_superior,
+                                  'limite_inferior': tipo_examen.limite_inferior}
+    return {"examen": examen, "resultado": response_resultado}
 
 
 @app.post("/crear_clinico", tags=["Clinico"])

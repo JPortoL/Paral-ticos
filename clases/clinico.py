@@ -21,17 +21,15 @@ class Clinico:
         return Examen(tipo_examen.id, datetime.datetime.now(), paciente_id,
                       EstadosExamen.CREADO.value, self.id)
 
-    def interpretar_examen(self, examen: Examen, interpretacion: str):
-        examen.interpretacion = interpretacion
+    def interpretar_examen(self, examen: Examen, resultado: Resultado, interpretacion: str):
+        resultado.interpretacion = interpretacion
         examen.fecha_interpretacion = datetime.datetime.now()
-        examen.clinico_interpreta_id = self.id
+        resultado.clinico_interpreta_id = self.id
         examen.estado = EstadosExamen.FINALIZADO.value
 
     def registrar_resultado(
             self,
             tipo_examen: TipoExamen,
-            limite_superior: float,
-            limite_inferior: float,
             valor_numerico: float,
             valor_texto: str,
             valor_booleano: bool,
@@ -39,7 +37,6 @@ class Clinico:
         if tipo_examen.es_texto or tipo_examen.es_imagen:
             if not valor_texto:
                 raise HTTPException(status_code=400, detail="VALOR TEXTO REQUIRED")
-
             return Resultado(datetime.datetime.now(), self.id, valor_texto=valor_texto)
         elif tipo_examen.es_booleano:
             if not valor_booleano:
@@ -47,7 +44,6 @@ class Clinico:
             return Resultado(datetime.datetime.now(), self.id, valor_booleano=valor_booleano)
 
         else:
-            if (not limite_superior) or (not limite_inferior) or (not valor_numerico):
+            if (not valor_numerico) or valor_numerico < 0:
                 raise HTTPException(status_code=400, detail="NUMERIC DATA REQUIRED")
-            return Resultado(datetime.datetime.now(), self.id, valor_numerico=valor_numerico,
-                             limite_inferior=limite_inferior, limite_superior=limite_superior)
+            return Resultado(datetime.datetime.now(), self.id, valor_numerico=valor_numerico)
